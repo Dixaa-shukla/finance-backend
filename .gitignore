@@ -31,3 +31,12 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+### RAG / Vector Store ###
+data/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example

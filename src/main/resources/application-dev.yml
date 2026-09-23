@@ -1,0 +1,140 @@
+spring:
+  # DATABASE------------------
+  datasource:
+    url: jdbc:mysql://localhost:3306/finance_portal
+    username: root
+    password: ${DB_PASSWORD:}
+
+  # used during production
+  #    hikari:
+  #     pool-name: HikariCP
+  #     maximum-pool-size: 5
+  #     connection-timeout: 600000
+  #     idle-timeout: 600000
+  #     max-lifetime: 1800000
+  #     validation-timeout: 1800000
+  #     leak-detection-threshold: 0
+  #     initialization-fail-timeout: -1
+
+  # JPA / HIBERNATE
+  jpa:
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        format_sql: true
+    show-sql: true
+    open-in-view: false
+
+  # SPRING AI - GEMINI
+  ai:
+    google:
+      genai:
+        api-key: ${GEMINI_API_KEY:}
+
+        chat:
+          options:
+            model: gemini-3.6-flash
+            temperature: 0.4
+
+        embedding:
+          api-key: ${GEMINI_API_KEY:}
+          # note the extra "text" level -> spring.ai.google.genai.embedding.text.options.model
+          text:
+            options:
+              model: gemini-embedding-001
+
+    # OLLAMA-------------  nested under ai: -> spring.ai.ollama.*
+    ollama:
+      base-url: http://localhost:11434
+      chat:
+        options:
+          model: llama3.2:1b
+          temperature: 0.4
+
+      # OLLAMA EMBEDDINGS - RAG
+      embedding:
+        options:
+          model: nomic-embed-text
+
+    # EMAIL / MAILTRAP
+  mail:
+    host: sandbox.smtp.mailtrap.io
+    port: 2525
+    username: ${MAILTRAP_USERNAME:}
+    password: ${MAILTRAP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
+  # FILE UPLOAD  (must sit under spring:, not spring.mail: — otherwise Boot's 1MB default applies)
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+  # ==================== MODULE 1: JWT + GOOGLE SIGN-IN ====================
+
+  security:
+
+    jwt:
+
+      secret: ${JWT_SECRET:}
+
+      issuer: auth-backend
+
+      # Access token lifetime. 900s
+      access-ttl-seconds: 900
+
+      # Refresh token lifetime. 1209600s = 14 days.
+      refresh-ttl-seconds: 1209600
+      refresh-cookie-name: refresh_toke
+      cookie-secure: false
+
+      # Lax = sent on same-site requests and top-level navigations.
+      cookie-same-site: Lax
+
+    # ==================== GOOGLE SIGN-IN ====================
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
+            scope: [email, profile]
+
+finance:
+  ai:
+    primary-provider: gemini   # "gemini" = Gemini primary/Ollama fallback; "ollama" flips it
+
+    # VECTOR STORE - RAG   (key = finance.ai.vector-store.* — in VectorStoreConfig)
+    vector-store:
+      persist-path: ./data/vector-store.json
+
+  # OCR   (key must be finance.ocr.* — see OcrConfig)
+  ocr:
+    tessdata-path: ./ocr/tessdata
+
+  auth:
+
+    # THE DEV TOGGLE. true = every endpoint needs a Bearer token and ownership
+    # is enforced.
+    enforce: true
+    admin-emails: ${ADMIN_EMAILS:}
+
+    frontend-redirect-uri: http://localhost:5173/oauth2/callback
+    password-reset-minutes: 60
+
+    email:
+      from: no-reply@finance-backend.local
+      password-reset-base-url: http://localhost:5173/reset-password
+
+
+cloudinary:
+  cloud-name: ${CLOUDINARY_CLOUD_NAME}
+  api-key: ${CLOUDINARY_API_KEY}
+  api-secret: ${CLOUDINARY_API_SECRET}
