@@ -1,7 +1,3 @@
 spring:
   application:
     name: finance-backend
-  profiles:
-    active: dev
-
-
