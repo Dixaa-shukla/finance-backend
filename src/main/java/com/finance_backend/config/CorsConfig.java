@@ -20,7 +20,6 @@ public class CorsConfig implements WebMvcConfigurer {
                 .allowedOrigins(allowedOrigins)
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
-                // Flip to true only once you actually send cookies/credentials.
                 .allowCredentials(false)
                 .maxAge(3600);
     }
